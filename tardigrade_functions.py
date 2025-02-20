@@ -78,7 +78,7 @@ def get_param(file):
     
     return param
 
-def get_matrix(coordsfile, imagenormaldir='Z'):
+def get_matrix(coordsfile):
     """
     Read in the image-to-stage rotation matrix. With hardcoded reflection matrix! TODO should not be hardcoded!
     Args:
@@ -89,9 +89,9 @@ def get_matrix(coordsfile, imagenormaldir='Z'):
     # rotate centerlines using matrix
     result_dict = get_stage_dict(coordsfile)
     m = np.array(result_dict['Camera']['imageToStage']).reshape(2,2)
-    if imagenormaldir == '-Z':
-        flip_y = np.array([[1,0],[0,-1]]) # reflection matrix
-        m = m @ flip_y # order matters. first rotation then reflect
+    
+    flip_y = np.array([[1,0],[0,-1]]) # reflection matrix
+    m = m @ flip_y # order matters. first rotation then reflect
     
     return m
 
@@ -144,7 +144,7 @@ def reformat_coordinatefile(stage_fn, dlc_df, cl_org):
 
     # transform pixel data to um data and get rotation matrix
     if param['use_matrix']:
-        matrix = get_matrix(stage_fn, param['imagenormaldir']) # scale included in rotation matrix
+        matrix = get_matrix(stage_fn) # scale included in rotation matrix
     else:
         matrix = np.identity(2)*param['scale'] # use a default matrix that doesn't rotate
     

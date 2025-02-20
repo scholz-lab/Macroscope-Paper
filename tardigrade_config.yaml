@@ -1,0 +1,82 @@
+video:
+  fps: 30
+  umpxl: 2.36/(50/12) # 2.36 pxl width, 50 mm objective, 12 mm tube lens
+  length: 400
+
+analysis:
+  use_matrix: True
+  roi_defined: {
+    12MM_30FPS_1: 5580,
+    12MM_30FPS_2: 4740,
+    12MM_30FPS_offFOOD_3: 6750,
+  }
+  bodyparts:
+    - front
+    - eye_left
+    - eye_right
+    - leg_1_left
+    - leg_1_right
+    - leg_2_left
+    - leg_2_right
+    - leg_3_left
+    - leg_3_right
+    - hindleg_left
+    - hindleg_right
+    - rear
+  limbs:
+    - leg_1_left
+    - leg_1_right
+    - leg_2_left
+    - leg_2_right
+    - leg_3_left
+    - leg_3_right
+    - hindleg_left
+    - hindleg_right
+  limbs_ord:
+    - hindleg_left
+    - leg_3_left
+    - leg_2_left
+    - leg_1_left
+    - leg_1_right
+    - leg_2_right
+    - leg_3_right
+    - hindleg_right
+  pairs:
+    - front
+    - eye
+    - leg_1
+    - leg_2
+    - leg_3
+    - hindleg
+    - rear
+  bp_pairs:
+    - leg_1
+    - leg_2
+    - leg_3
+    - hindleg
+color:
+  bp_color: {
+    front: '#8000ff',
+    eye_left: '#5247fc',
+    eye_right: '#2489f5',
+    leg_1_left: '#0ac0e8',
+    leg_1_right: '#3ae8d6',
+    leg_2_left: '#68fcc1',
+    leg_2_right: '#96fca7',
+    leg_3_left: '#c4e88a',
+    leg_3_right: '#f4c069',
+    hindleg_left: '#ff8947',
+    hindleg_right: '#ff4724',
+    rear: '#ff0000'
+  }
+Hildebrand-style:
+  bp_pos: {
+    leg_1_left: 4,
+    leg_1_right: 3,
+    leg_2_left: 5,
+    leg_2_right: 2,
+    leg_3_left: 6,
+    leg_3_right: 1,
+    hindleg_left: 7,
+    hindleg_right: 0
+  }

@@ -1,0 +1,9 @@
+filesettings:
+    date: ''
+    experiment: ''
+    videopath: ''
+    outpath: ''
+    fileinfo: ''
+settings:
+    crop: [50, 50]
+    fps: 30

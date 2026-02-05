@@ -5,6 +5,7 @@ from scipy.signal import savgol_filter
 from scipy import stats
 import re
 from itertools import chain
+import copy
 
 
 ### functions
@@ -109,7 +110,7 @@ def rotate_3rdaxis(calibrationMatrix, arr, param): #im for image and ratio_stage
     rot = np.einsum('ij,lkj->ikl', calibrationMatrix, cent)
     return  rot
 
-def reformat_coordinatefile(stage_fn, dlc_df, cl_org):
+def reformat_coordinatefile(stage_fn, dlc_df, bodyparts, pairs):
     """
     Find a txt file in the input path and recalculate coordinates in useful units. 
     Also add signals from image processing
@@ -161,23 +162,23 @@ def reformat_coordinatefile(stage_fn, dlc_df, cl_org):
     # add stage offset
     worm.loc[:,idx[:,:,'x']] = pd.DataFrame(xworm).add(tracks.loc[:,'Xstage']).T.values
     worm.loc[:,idx[:,:,'y']] = pd.DataFrame(yworm).add(tracks.loc[:,'Ystage']).T.values
+    worm_org = copy.deepcopy(worm)
+    # smooth worm
+    worm.loc[:,idx[:,:,['x','y']]] = savgol_filter(worm.loc[:,idx[:,:,['x','y']]], int(param['fps']/2), 2, axis=0)
     # cacluate cms for worm from all bps
     tracks.loc[:,'Xcms'] = worm.loc[:,idx[:,:,'x']].mean(axis=1)
     tracks.loc[:,'Ycms'] = worm.loc[:,idx[:,:,'y']].mean(axis=1)
     
     ### centerline
-    # make 3d array for centerline
-    cl_arr = np.stack([cl_org.loc[:,idx[:,'x']].values, cl_org.loc[:,idx[:,'y']].values])
-    cl_arr = np.moveaxis(cl_arr,0,-1)
-    # transform coordinates with rotation matrix
-    cl_x, cl_y = rotate_3rdaxis(matrix, cl_arr, param)
-    # create worm dataframe in shape of cl_org
-    cl_rot = pd.DataFrame([]).reindex_like(cl_org).drop('likelihood', axis=1, level=1)
-    # add stage offset
-    cl_rot.loc[:,idx[:,'x']] = pd.DataFrame(cl_x).add(tracks.loc[:,'Xstage']).T.values
-    cl_rot.loc[:,idx[:,'y']] = pd.DataFrame(cl_y).add(tracks.loc[:,'Ystage']).T.values
-    
-    return worm, tracks, cl_rot, matrix
+    # Mean point between bodypart pairs
+    cl_org = pd.DataFrame([])
+    for p in pairs:
+        bps = [bp for bp in bodyparts if p in bp]
+        mean_p = worm.loc[:,idx[:,bps,]].T.groupby(level=2).mean().T
+        mean_p.columns = pd.MultiIndex.from_product([[p], mean_p.columns])
+        cl_org = pd.concat([cl_org, mean_p], axis=1)
+
+    return  worm, worm_org, tracks, cl_org, matrix
 
 def get_bouts(data):
     """
@@ -337,6 +338,40 @@ def mode_chunks(data, max_range):
         # reindex based on starts and fill in gaps
         new_df = new_df.set_index('starts').reindex(range(len(data)), method='ffill')['values'].values
         new_data[col] = new_df
+    return new_data
+
+def remove_small_bouts(data, mindur):
+    """
+    Performs mode on bout chunks that are shorter than max_range.
+    Args:
+        data (array or DataFrame): Data to perform mode on
+        mindur (int): minimum duration of bouts, smaller bouts are removed
+    Returns:
+        new_data (pd.DataFrame): interpolated data with bouts shorter than mindur removed
+    """
+    # ensure DataFrame and object
+    if not isinstance(data, pd.DataFrame):
+        data = pd.DataFrame(data)
+    data = data.astype(object)
+
+    new_data = pd.DataFrame([]).reindex_like(data) # init DataFrame
+    # iterate over columns
+    for col in data.columns:
+        d = data[col].copy()
+        starts = np.where(d.shift(1) != d)[0] # starts when previous different than current
+        ends = np.where(d.shift(-1) != d)[0]+1 # ends when next different than current
+        durs = ends - starts # bout duration
+        values = d[starts]  # bout label
+        index = np.arange(len(starts)) # index over bouts
+        df = pd.DataFrame([starts,ends,durs,values,index], index=['starts','ends','durs','values','index']).T
+        bool_short = durs < mindur # bouts that are shorter than max_range
+        try:
+            remove_idx = np.concatenate([np.arange(df['starts'][i], df['ends'][i]) for i in df[bool_short].index]).flatten()
+        except:
+            remove_idx = []
+        d.iloc[remove_idx] = np.nan
+        d = d.astype(float).interpolate(limit_direction='both').round().astype(bool)
+        new_data[col] = d
     return new_data
 
 """

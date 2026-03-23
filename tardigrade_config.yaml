@@ -1,14 +1,11 @@
 video:
-  fps: 30
-  umpxl: 2.36/(50/12) # 2.36 pxl width, 50 mm objective, 12 mm tube lens
-  length: 400
+  fps: 15
+  umpxl: 2.36/(50/16) # 2.36 pxl width, 50 mm objective, 12 mm tube lens
+  length: 800
 
 analysis:
   use_matrix: True
   roi_defined: {
-    12MM_30FPS_1: 5580,
-    12MM_30FPS_2: 4740,
-    12MM_30FPS_offFOOD_3: 6750,
   }
   bodyparts:
     - front
@@ -71,12 +68,12 @@ color:
   }
 Hildebrand-style:
   bp_pos: {
-    leg_1_left: 4,
-    leg_1_right: 3,
-    leg_2_left: 5,
-    leg_2_right: 2,
-    leg_3_left: 6,
-    leg_3_right: 1,
-    hindleg_left: 7,
-    hindleg_right: 0
+    leg_1_left: 0,
+    leg_1_right: 1,
+    leg_2_left: 2,
+    leg_2_right: 3,
+    leg_3_left: 4,
+    leg_3_right: 5,
+    hindleg_left: 6,
+    hindleg_right: 7
   }
